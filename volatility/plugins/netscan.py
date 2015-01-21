@@ -17,7 +17,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Volatility.  If not, see <http://www.gnu.org/licenses/>.
-#
+# Modified by Glenn P. Edwards Jr. on 2014-12-17 to modify the returned output
 
 import volatility.utils as utils
 import volatility.plugins.common as common
@@ -213,7 +213,7 @@ class Netscan(common.AbstractScanCommand):
 
             if isinstance(objct, _UDP_ENDPOINT):
                 # For UdpA, the state is always blank and the remote end is asterisks
-                for ver, laddr, _ in objct.dual_stack_sockets():
+                for ver, laddr, _ in objct.dual_stack_sockets():                 
                     yield objct, "UDP" + ver, laddr, objct.Port, "*", "*", ""
             elif isinstance(objct, _TCP_ENDPOINT):
 
@@ -233,7 +233,9 @@ class Netscan(common.AbstractScanCommand):
         return TreeGrid([(self.offset_column(), Address),
                        ("Proto", str),
                        ("LocalAddr", str),
+                       ("LocalPort", str),
                        ("ForeignAddr", str),
+                       ("ForeignPort", str),
                        ("State", str),
                        ("PID", int),
                        ("Owner", str),
@@ -246,13 +248,15 @@ class Netscan(common.AbstractScanCommand):
             lendpoint = "{0}:{1}".format(laddr, lport)
             rendpoint = "{0}:{1}".format(raddr, rport)
 
-            yield (0, 
-                [Address(net_object.obj_offset), 
-                str(proto), 
-                lendpoint,
-                rendpoint, 
-                str(state), 
+            # Makes it easier to parse with consistent fields   
+            yield (0,
+                [Address(net_object.obj_offset),
+                str(proto or '-'),
+                str(laddr or '-'),
+                str(lport or '-'),
+                str(raddr or '-'),
+                str(rport or '-'),
+                str(state or '-'),
                 int(net_object.Owner.UniqueProcessId),
-                str(net_object.Owner.ImageFileName),
-                str(net_object.CreateTime or '')])
-
+                str(net_object.Owner.ImageFileName or '-'),
+                str(net_object.CreateTime or '-')])
